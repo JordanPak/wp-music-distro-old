@@ -78,8 +78,8 @@ Template Name: Concert Band MusicDistro
 						?>
 						
                         
-                        <!--// FOR TESTING //-->
-                        
+                        <!--// FOR TESTING //--><?php /*
+                       	
                         <div class="row">
                         
                         	<div class="col-md-6">
@@ -116,7 +116,10 @@ Template Name: Concert Band MusicDistro
                                                     
                         </div><!-- /.row -->
                         	
-           
+							
+           				*/ ?><!-- END TESTING -->
+                        
+                        
                         
                         <div class="row">
                         	<div class="col-xs-4">
@@ -127,12 +130,12 @@ Template Name: Concert Band MusicDistro
                                     
 									<?php 										
 										
-										// For Testing
+
 										if( $selected != 0 ) {
-											echo '<br><br><p><b>Different Instrument?</b></p>';
+											echo '<p><b>Different Instrument?</b></p>';
 										}
 										else {
-											echo '<br><br><p><b>Select a ' . $band_name . ' Instrument:</b></p>';
+											echo '<p><b>Select an Instrument:</b></p>';
 										}
 										
 										
@@ -178,7 +181,8 @@ Template Name: Concert Band MusicDistro
                         
                         <!-- Another Row -->
                         <div class="row">
-                        	<div class="col-md-12">
+                        
+                        	<br>
                         		
 								<?php
                                 	
@@ -196,7 +200,9 @@ Template Name: Concert Band MusicDistro
 										$arrangements = new WP_Query( $arrangementSelection );
 										
 										
-										// FOR TESTING!
+										
+										// FOR TESTING! 
+										/*
 										echo '<br><p><b>All <u>' . $band_name . '</u> <u>' . $selected_instrument_name . '</u> Arrangements</b></p>';
 										
 										if($arrangements->have_posts() ){
@@ -212,7 +218,17 @@ Template Name: Concert Band MusicDistro
 										{
 											echo '<p>No arrangements found</p>';	
 										}
+										*/
 										
+										
+										// Throw error if no arrangements
+										if(($arrangements->have_posts()) == false)
+										{
+											echo '<div class="col-md-12">';
+											echo '<div class="alert alert-warning">No ' . $band_name . ' ' . $selected_instrument_name . ' arrangements found!</div>';
+											echo '</div>';
+										}
+												
 																				
 										
 										// Args for Arrangements wp_query
@@ -308,7 +324,7 @@ Template Name: Concert Band MusicDistro
 																			// Output link for file
 																			// To be updated later to force download when Chris finishes rewritting
 																			// the disgusting thing that is EDD Free Downloads
-																			echo '<a href="'.$file['file'].'" target="_blank">Part '.$name.'</a>';
+																			echo '<a href="'.$file['file'].'" target="_blank">' . $name . '</a>';
 																			
 																			// If it's not the last item, put in a pipe
 																			if ( $counter != count($files)){
@@ -348,7 +364,6 @@ Template Name: Concert Band MusicDistro
 									
                                 ?>
                         
-                        	</div><!-- /.col -->
                         </div><!-- /.row -->
 					
 					
