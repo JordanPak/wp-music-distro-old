@@ -169,7 +169,7 @@ Template Name: Concert Band MusicDistro
                                     <br>
                                     
                                     <!-- Submit Button -->
-                                    <button type="submit" class="btn btn-primary">Go</button>                          
+                                    <button type="submit" class="btn btn-primary">Get Music</button>                          
                                 
                                 </form>
                             </div><!-- /.col -->
