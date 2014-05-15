@@ -15,7 +15,7 @@
 						<?php wp_bootstrap_footer_links(); // Adjust using Menus in Wordpress Admin ?>
 					</nav>
 					
-					<p class="pull-right"><a href="http://ucfbands.com/" target="_blank">UCFBands.com</a> | Marching Knights Media Coordinators</p>
+					<p class="pull-right"><a href="http://JpakMedia.com/" target="_blank">JpakMedia.com</a> | WP MusicDistro</p>
 			
 					<p class="attribution">&copy; JpakMedia 2014</p>
 				

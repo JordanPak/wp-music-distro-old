@@ -16,7 +16,7 @@
 
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-define('DB_NAME', 'musicdistro-dev');
+define('DB_NAME', 'wp-music-distro');
 
 /** MySQL database username */
 define('DB_USER', 'root');
@@ -42,14 +42,14 @@ define('DB_COLLATE', '');
  *
  * @since 2.6.0
  */
-define('AUTH_KEY',         '|sGAZ!2lDd;]{%CXVt:N@NJ,P@N<^}G|9C&syh(nH#w8i7QTy+!KUuSwlLHyP%+K');
-define('SECURE_AUTH_KEY',  '>@7<3C9#kBy.9xfdD)rn}_ptiK+W$)Ylz>@e]>.+rPv=Xu0,jGa{~uQ&bJ50dufZ');
-define('LOGGED_IN_KEY',    '8:l#2C-ky|]S/L~Ei=kc;u:(0F7izq@n&b)?b7vWBG##(@7A<:LrZvH:lEbh5Hg*');
-define('NONCE_KEY',        'U yM?O|R^0]Xl~<SCb@c/7T V4h0FAST-WY}1Jklc0$;@|o&`HGemM>4t3gGNYYU');
-define('AUTH_SALT',        'hIonL %%M8+|QP|Z.DYI%L[f$wG=.p+.*5tED5AGvE{~wQG!t(Qs|#OaVcL%8v_:');
-define('SECURE_AUTH_SALT', 'z+mW`^VU|;2&#UNjn$o<SSG-eG!A1c#5#`u-,n8E2^leYEo T]r%bc|A}uwa_0UO');
-define('LOGGED_IN_SALT',   'GP142jr+|imP[^6I?hkV ^6_+<$/Tlv&oL:KRY@8tZJ)uUk !,_^l@$m G+_##o(');
-define('NONCE_SALT',       'L%@;;IVG*+L|_a6`z4,yE~v2-&?P`#_/$?FO*%?31hdde+CZV9:mQkv %wTIgCU9');
+define('AUTH_KEY',         'put your unique phrase here');
+define('SECURE_AUTH_KEY',  'put your unique phrase here');
+define('LOGGED_IN_KEY',    'put your unique phrase here');
+define('NONCE_KEY',        'put your unique phrase here');
+define('AUTH_SALT',        'put your unique phrase here');
+define('SECURE_AUTH_SALT', 'put your unique phrase here');
+define('LOGGED_IN_SALT',   'put your unique phrase here');
+define('NONCE_SALT',       'put your unique phrase here');
 
 /**#@-*/
 
@@ -78,7 +78,6 @@ define('WPLANG', '');
  * It is strongly recommended that plugin and theme developers use WP_DEBUG
  * in their development environments.
  */
-define( 'WP_AUTO_UPDATE_CORE', true );
 define('WP_DEBUG', false);
 
 /* That's all, stop editing! Happy blogging. */

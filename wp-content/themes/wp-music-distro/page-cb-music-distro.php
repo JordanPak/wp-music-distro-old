@@ -1,6 +1,6 @@
 <?php
 /*
-Template Name: Marching Knights MusicDistro
+Template Name: Concert Band MusicDistro
 */
 ?>
 
@@ -34,8 +34,8 @@ Template Name: Marching Knights MusicDistro
 							//-- ARCHIVE PAGE INFORMATION --//
 							//------------------------------//
 							
-							// SLUG of the band (parent category) called "Marching Knights" 
-							$band_slug = 'marching-knights';
+							// SLUG of the band (parent category)
+							$band_slug = 'concert-band';
 							
 							
 							// Get the whole term BY slug, using the BAND SLUG (Parent Category Slug) 
@@ -213,25 +213,25 @@ Template Name: Marching Knights MusicDistro
 											echo '<p>No arrangements found</p>';	
 										}
 										
-										/* For Testing
-										echo '<p><b>Arrangements: </b><br>';
-										foreach($arrangements as $arrangement)
-										{
-											echo get_the_title($arrangement) . '<br>';
-										}
-										echo '</p>';
-										*/
-										
-										
-										// For Testing
-										echo '<p><b>Song Categories:</b></p>';
-										
 																				
+										
+										// Args for Arrangements wp_query
+										$arrangementSelection = array(
+											'post_type'			=> 'download',
+											'download_category'	=> $selected_instrument_slug,
+											'fields' => 'ids' // This is so only the ID is returned instead of the WHOLE post object (Performance)
+										);
+										
+										
+										// Array of all the songs for the selected instrument
+										$arrangements = new WP_Query( $arrangementSelection );
+										$arrangements = $arrangements->get_posts();
+													
+																			
 										// Array of all types of songs (Via tags)
-										$tags = wp_get_object_terms( $arrangements, 'post_tag' /*, $optionalArgs = array() */);
+										$tags = wp_get_object_terms( $arrangements, 'download_tag' /*, $optionalArgs = array() */);										
 										
-																				
-										/*
+										
 										// Loop through each tag and make a box for it
 										foreach( $tags as $tag )
 										{ ?>
@@ -240,17 +240,103 @@ Template Name: Marching Knights MusicDistro
                                                 
                                                 <div class="panel panel-warning">
                                                     
-                                                    <div class="panel-heading"><?php echo $tag->name; ?> Kidden</div>
+                                                    <div class="panel-heading"><?php echo $tag->name; ?></div>
                                                 	
                                                     <div class="panel-body">
-                                                        Panel content
+                                                        
+                                                        <?php
+															
+															// Go through all the arrangements (which is only ids
+															// of arrangements)
+															foreach($arrangements as $arrangement)
+															{
+																// Get the arrangement object from the ID	
+																$object = get_post($arrangement);
+																
+																
+																// See if the arrangement has the tag of the tag we're checking
+																if( has_term( $tag, 'download_tag', $object ) )
+																{
+																	
+																	// Show the Title
+																	echo get_the_title($arrangement);
+																	echo ': ';
+																	
+																	
+																	// Get the file (names & URLs)
+																	$files = edd_get_download_files($arrangement);
+																	
+																	
+																	// Set counter for unsetting, keeps track of what index we're at for removing
+																	$counter_a = 0;
+																	
+																	
+																	// Go through each file 
+																	foreach( $files as $file){
+																		$explosion = explode(" ", $file['name']);
+																		
+																		// If the the file name does not begin with the selected instrument,
+																		// remove the FILE from the array.
+																		if ($explosion[0] !== $selected_instrument_name){
+																			unset($files[$counter]);
+																		}
+																		$counter++;
+																	}
+																	
+																	// Sorts the array alphabetically
+																	asort($files);
+																	
+																	
+																	// Counter for pipes
+																	$counter = 1;
+																	
+																	
+																	// Go through each file
+																	foreach( $files as $file){
+																		
+																		// Take the string and break into an array (Explode)
+																		// ex: "Hello World"
+																		// explode(" ", Hello World) = array(Hello, World); (Indexed array)
+																		$explosion = explode(" ", $file['name']);
+																		
+																		// If the first of the array = the selected instrument
+																		if ($explosion[0] == $selected_instrument_name){
+																			
+																			// Remove the instrument name and space from file name (variable)
+																			$name = str_replace($selected_instrument_name." ","",$file['name']);
+																			
+																			// Output link for file
+																			// To be updated later to force download when Chris finishes rewritting
+																			// the disgusting thing that is EDD Free Downloads
+																			echo '<a href="'.$file['file'].'" target="_blank">Part '.$name.'</a>';
+																			
+																			// If it's not the last item, put in a pipe
+																			if ( $counter != count($files)){
+																				echo '&nbsp;|&nbsp;';
+																			}
+																			
+																			$counter++;
+																		
+																		} // IF the name of the file = selected instrument
+																		
+																		
+																	} // IF the arrangement has the tag of the tag we're checking
+																	
+																	
+																} // foreach($arrangements as $arrangement)
+															
+															
+															} // foreach
+															
+                                                        ?>
+                                                        
                                                     </div>
                                                     
                                                 </div><!-- /.panel-warning -->
                                           	</div><!-- /.col-md-4 -->						
                                         
                                   <?php } // foreach $tags
-								  */
+								  
 										
 										
 										

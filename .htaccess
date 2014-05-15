@@ -2,11 +2,11 @@
 # BEGIN WordPress
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteBase /ucfbands-music-dev/
+RewriteBase /wp-music-distro/
 RewriteRule ^index\.php$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /ucfbands-music-dev/index.php [L]
+RewriteRule . /wp-music-distro/index.php [L]
 </IfModule>
 
 # END WordPress
