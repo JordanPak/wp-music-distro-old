@@ -244,7 +244,11 @@ Template Name: Marching Band MusicDistro
                                             // Array of all types of songs (Via tags)
                                             $tags = wp_get_object_terms( $arrangements, 'download_tag' /*, $optionalArgs = array() */);										
                                             
-                                            
+											
+											// Remove duplicate tags
+											$tags = array_unique($tags, SORT_REGULAR);
+											                                            
+											
                                             // Loop through each tag and make a box for it
                                             foreach( $tags as $tag )
                                             { ?>
@@ -292,6 +296,17 @@ Template Name: Marching Band MusicDistro
                                                                             // Break file into array of strings
                                                                             $explosion = explode(" ", $file['name']);
                                                                             
+																			
+																			// For Testing
+																			/*echo '<br>$exp: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2] . '<br>';
+																			if($explosion[0] == NULL)
+																				echo '$explosion[0] is NULL<br>';
+																			if($explosion[1] == NULL)
+																				echo '$explosion[1] is NULL<br>';
+																			if($explosion[2] == NULL)
+																				echo '$explosion[2] is NULL<br>';
+																			*/
+																			
                                                                             
                                                                             // TWO WORD INSTRUMENT //
     
@@ -301,9 +316,14 @@ Template Name: Marching Band MusicDistro
                                                                             {
                                                                                 
                                                                                 // For Testing
-                                                                                //echo '<br><b>$explosion[1] is not a number!</b><br>';
+                                                                                //echo $file['name'] . ' Is a two-word instrument<br>';
+																				
                                                                                 if (($explosion[0] . ' ' . $explosion[1]) !== $selected_instrument_name){
-                                                                                    unset($files[$counter]);
+                                                                                    
+																					// For Testing
+																					//echo 'Unset ' . $counter_a . '!<br>';
+																					
+																					unset($files[$counter_a]);
                                                                                 }
                                                                                                                                                             
                                                                             } // if (two word instrument)
@@ -317,13 +337,17 @@ Template Name: Marching Band MusicDistro
                                                                             else {
                                                                                 
                                                                                 if ($explosion[0] !== $selected_instrument_name){
-                                                                                    unset($files[$counter]);
+
+																					// For Testing
+																					//echo 'Unset ' . $counter_a . '!<br>';
+
+                                                                                    unset($files[$counter_a]);
                                                                                 }
                                                                                 
                                                                             } // else
 																			
                                                                             
-                                                                            $counter++;
+                                                                            $counter_a++;
                                                                         }
                                                                         
                                                                         
@@ -345,7 +369,7 @@ Template Name: Marching Band MusicDistro
                                                                             
 																			
 																			// For Testing
-																			echo '<br>Expl: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2];
+																			//echo '<br>Expl: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2];
 																			
                                                                                                                                                     
                                                                             // If the first of the array = the selected instrument OR
@@ -382,6 +406,7 @@ Template Name: Marching Band MusicDistro
 																				}
 																				
                                                                                 
+																				
                                                                                 // If it's not the last item, put in a pipe (DISABLED)
                                                                                 if ( $counter != count($files)){
                                                                                     echo '&nbsp';
@@ -398,13 +423,17 @@ Template Name: Marching Band MusicDistro
                                                                             } // IF the name of the file = selected instrument
                                                                             
                                                                             
-                                                                        } // IF the arrangement has the tag of the tag we're checking
+                                                                        } // foreach: files as file
                                                                         
                                                                         
-                                                                    } // foreach($arrangements as $arrangement)
+																		// Add Spacer
+																		echo '<br>';
+																		
+																		
+                                                                    } // if: has_term download tag
                                                                 
                                                                 
-                                                                } // foreach
+                                                                } // foreach: arrangements as arrangement
                                                                 
                                                             ?>
                                                             
@@ -413,7 +442,7 @@ Template Name: Marching Band MusicDistro
                                                     </div><!-- /.panel-warning -->
                                                 </div><!-- /.col-md-4 -->						
                                             
-                                      <?php } // foreach $tags
+                                      <?php } // foreach: $tags
                                       
                                             
                                             
