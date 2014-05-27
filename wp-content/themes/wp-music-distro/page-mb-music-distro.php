@@ -218,27 +218,6 @@ Template Name: Marching Band MusicDistro
                                             $arrangements = new WP_Query( $arrangementSelection );
                                             
                                             
-                                            
-                                            // FOR TESTING! 
-                                            /*
-                                            echo '<br><p><b>All <u>' . $band_name . '</u> <u>' . $selected_instrument_name . '</u> Arrangements</b></p>';
-                                            
-                                            if($arrangements->have_posts() ){
-                                                echo '<ul>';
-                                                while($arrangements->have_posts())
-                                                {
-                                                    $arrangements->the_post();	
-                                                    echo '<li>' . get_the_title() . '</li>';
-                                                }
-                                                echo '</ul><br><br>';
-                                            } // End if
-                                            else
-                                            {
-                                                echo '<p>No arrangements found</p>';	
-                                            }
-                                            */
-                                            
-                                            
                                             // Throw error if no arrangements
                                             if(($arrangements->have_posts()) == false)
                                             {
@@ -284,7 +263,8 @@ Template Name: Marching Band MusicDistro
                                                                 // of arrangements)
                                                                 foreach($arrangements as $arrangement)
                                                                 {
-                                                                    // Get the arrangement object from the ID	
+                                                                    
+																	// Get the arrangement object from the ID	
                                                                     $object = get_post($arrangement);
                                                                     
                                                                     
@@ -316,18 +296,8 @@ Template Name: Marching Band MusicDistro
                                                                             // TWO WORD INSTRUMENT //
     
                                                                             // Check for instrument names with two words by seeing if the second
-                                                                            // string is a number or not.
-                                                                            if(
-                                                                                ($explosion[1] != "1") && 
-                                                                                ($explosion[1] != "2") && 
-                                                                                ($explosion[1] != "3") &&
-                                                                                ($explosion[1] != "4") &&
-                                                                                ($explosion[1] != "5") &&
-                                                                                ($explosion[1] != "6") &&
-                                                                                ($explosion[1] != "7") &&
-                                                                                ($explosion[1] != "8") &&
-                                                                                ($explosion[1] != "9")
-                                                                            )
+                                                                            // exists and if it's a number or not
+                                                                            if( (is_numeric($explosion[1]) == FALSE) && ($explosion[1] != NULL) )
                                                                             {
                                                                                 
                                                                                 // For Testing
@@ -351,11 +321,13 @@ Template Name: Marching Band MusicDistro
                                                                                 }
                                                                                 
                                                                             } // else
+																			
                                                                             
                                                                             $counter++;
                                                                         }
                                                                         
-                                                                        // Sorts the array alphabetically
+                                                                        
+																		// Sorts the array alphabetically
                                                                         asort($files);
                                                                         
                                                                         
@@ -371,6 +343,10 @@ Template Name: Marching Band MusicDistro
                                                                             // explode(" ", Hello World) = array(Hello, World); (Indexed array)
                                                                             $explosion = explode(" ", $file['name']);																		
                                                                             
+																			
+																			// For Testing
+																			echo '<br>Expl: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2];
+																			
                                                                                                                                                     
                                                                             // If the first of the array = the selected instrument OR
                                                                             // If the first two of the array = selected instrument
@@ -383,15 +359,39 @@ Template Name: Marching Band MusicDistro
                                                                                 // Remove the instrument name and space from file name (variable)
                                                                                 $name = str_replace($selected_instrument_name." ","",$file['name']);
                                                                                 
-                                                                                // Output link for file
+                                                                                
+																				// Output link for file
                                                                                 // To be updated later to force download when Chris finishes rewritting
                                                                                 // the disgusting thing that is EDD Free Downloads
-                                                                                echo '<a class="btn btn-xs btn-default" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
+                                                                                
+																				
+																				// If the arrangment only has one part for a given instrument
+																				// (Detected by the input name not having a number)
+																				if ( 
+																					( is_numeric($explosion[1]) == FALSE ) &&
+																					( is_numeric($explosion[2]) == FALSE ) 
+																				   )
+																				{
+																					echo '<a class="btn btn-xs btn-default" href="'.$file['file'].'" target="_blank"><span class="glyphicon glyphicon-arrow-down"></span></a>';
+																				}
+																				
+																				
+																				// For sheet music with more than one part for a given instrument
+																				else {
+																					echo '<a class="btn btn-xs btn-default" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
+																				}
+																				
                                                                                 
                                                                                 // If it's not the last item, put in a pipe (DISABLED)
                                                                                 if ( $counter != count($files)){
                                                                                     echo '&nbsp';
                                                                                 }
+																				
+																				
+																				// Unset / Reset array to avoid pulling two numbers in explosion
+																				//unset($explosion);
+																				$explosion = array();
+																				
                                                                                 
                                                                                 $counter++;
                                                                             
