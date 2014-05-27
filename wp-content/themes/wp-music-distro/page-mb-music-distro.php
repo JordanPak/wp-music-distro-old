@@ -197,38 +197,17 @@ Template Name: Marching Band MusicDistro
                             <br>
                             
                             
-                            <!-- Another Row -->
                             <div class="row">
                             
                                 <br>
                                     
                                     <?php
                                         
-                                        // If an instrument was selected
+                                        //-- IF AN INSTRUMENT HAS BEEN SELECTED --//
                                         if($selected)
                                         {	
-                                                                                    
-                                            // Args for Arrangements wp_query
-                                            $arrangementSelection = array(
-                                                'post_type'			=> 'download',
-                                                'download_category'	=> $selected_instrument_slug
-                                            );
                                             
-                                            // Array of all the songs for the selected instrument
-                                            $arrangements = new WP_Query( $arrangementSelection );
-                                            
-                                            
-                                            // Throw error if no arrangements
-                                            if(($arrangements->have_posts()) == false)
-                                            {
-                                                echo '<div class="col-md-12">';
-                                                echo '<div class="alert alert-warning">No ' . $band_name . ' ' . $selected_instrument_name . ' arrangements found!</div>';
-                                                echo '</div>';
-                                            }
-                                                    
-                                                                                    
-                                            
-                                            // Args for Arrangements wp_query
+                                            //-- ARRANGEMENTS WP_QUERY OPTIONS --//
                                             $arrangementSelection = array(
                                                 'post_type'			=> 'download',
                                                 'download_category'	=> $selected_instrument_slug,
@@ -236,20 +215,44 @@ Template Name: Marching Band MusicDistro
                                             );
                                             
                                             
-                                            // Array of all the songs for the selected instrument
-                                            $arrangements = new WP_Query( $arrangementSelection );
-                                            $arrangements = $arrangements->get_posts();
-                                                        
-                                                                                
-                                            // Array of all types of songs (Via tags)
-                                            $tags = wp_get_object_terms( $arrangements, 'download_tag' /*, $optionalArgs = array() */);										
+											
+											//----------------------------------------------------//
+                                            //-- ARRAY OF ALL SONGS FOR THE SELECTED INSTRUMENT --//
+											//----------------------------------------------------//
+											$arrangements = new WP_Query( $arrangementSelection );
                                             
 											
-											// Remove duplicate tags
+											       
+                                            // If no arrangements: Error
+                                            if(($arrangements->have_posts()) == false)
+                                            {
+                                                echo '<div class="col-md-12">';
+                                                echo '<div class="alert alert-warning">No ' . $band_name . ' ' . $selected_instrument_name . ' arrangements found!</div>';
+                                                echo '</div>';
+                                            }
+											
+											
+											
+											// Get Posts associated with arrangements	        
+                                            $arrangements = $arrangements->get_posts();
+											
+											
+											
+											//----------------------------------------//
+											//-- ARRAY OF ALL TYPES OF SONGS (TAGS) --//
+											//----------------------------------------//                                    
+                                            $tags = wp_get_object_terms( $arrangements, 'download_tag');										
+                                            
+											
+											
+											// Remove Duplicate Tags
 											$tags = array_unique($tags, SORT_REGULAR);
 											                                            
 											
-                                            // Loop through each tag and make a box for it
+                                            
+											//---------------------------//
+											//-- CATEGORY BOXES (TAGS) --//
+											//---------------------------//
                                             foreach( $tags as $tag )
                                             { ?>
                                                 
@@ -263,8 +266,10 @@ Template Name: Marching Band MusicDistro
                                                             
                                                             <?php
                                                                 
-                                                                // Go through all the arrangements (which is only ids
-                                                                // of arrangements)
+																
+                                                                //-- CYCLE THROUGH ARRANGEMENTS --//
+                                                                
+																// Just the IDs of the arrangements
                                                                 foreach($arrangements as $arrangement)
                                                                 {
                                                                     
@@ -272,16 +277,17 @@ Template Name: Marching Band MusicDistro
                                                                     $object = get_post($arrangement);
                                                                     
                                                                     
-                                                                    // See if the arrangement has the tag of the tag we're checking
+																	
+																	//-- CHECK IF CURRENT ARRANGEMENT HAS TAG FOR THIS BOX --//
                                                                     if( has_term( $tag, 'download_tag', $object ) )
                                                                     {
                                                                         
-                                                                        // Show the Title
-                                                                        echo '<b>' . get_the_title($arrangement);
-                                                                        echo ': </b>';
+																		
+                                                                        //-- Display Arrangement Title --//
+                                                                        echo '<b>' . get_the_title($arrangement) . ': </b>';
                                                                         
                                                                         
-                                                                        // Get the file (names & URLs)
+																		//-- Get Files (Names & URLSs) For Current Arrangement --//
                                                                         $files = edd_get_download_files($arrangement);
                                                                         
                                                                         
@@ -289,64 +295,45 @@ Template Name: Marching Band MusicDistro
                                                                         $counter_a = 0;
                                                                         
                                                                         
-                                                                        // Go through each file 
+                                                                        
+																		//-- CYCLE THROUGH FILES OF CURRENT ARRANGEMENT --//
+																		//--     AND REMOVE UNMATCHING INSTRUMENTS      --//
                                                                         foreach( $files as $file){
                                                                             
                                                                             
-                                                                            // Break file into array of strings
+                                                                            //-- Explode File Into Array of Strings --//
                                                                             $explosion = explode(" ", $file['name']);
                                                                             
-																			
-																			// For Testing
-																			/*echo '<br>$exp: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2] . '<br>';
-																			if($explosion[0] == NULL)
-																				echo '$explosion[0] is NULL<br>';
-																			if($explosion[1] == NULL)
-																				echo '$explosion[1] is NULL<br>';
-																			if($explosion[2] == NULL)
-																				echo '$explosion[2] is NULL<br>';
-																			*/
-																			
-                                                                            
+																				
+																																						
+                                                                            //---------------------//
                                                                             // TWO WORD INSTRUMENT //
-    
-                                                                            // Check for instrument names with two words by seeing if the second
-                                                                            // exists and if it's a number or not
+    																		//------------------------------------------------//
+                                                                            // If the second word is NOT a number and EXISTS  //
+																			//------------------------------------------------//
                                                                             if( (is_numeric($explosion[1]) == FALSE) && ($explosion[1] != NULL) )
                                                                             {
-                                                                                
-                                                                                // For Testing
-                                                                                //echo $file['name'] . ' Is a two-word instrument<br>';
 																				
-                                                                                if (($explosion[0] . ' ' . $explosion[1]) !== $selected_instrument_name){
-                                                                                    
-																					// For Testing
-																					//echo 'Unset ' . $counter_a . '!<br>';
-																					
+																				//-- Unset Current File If It's Not For Selected Instrument --//
+                                                                                if ( ($explosion[0] . ' ' . $explosion[1]) !== $selected_instrument_name )																					
 																					unset($files[$counter_a]);
-                                                                                }
-                                                                                                                                                            
-                                                                            } // if (two word instrument)
+                                                                            }
                                                                             
                                                                             
-                                                                            
+																			
+                                                                            //---------------------//
                                                                             // ONE WORD INSTRUMENT //
-                                                                            
-                                                                            // If the the file name does not begin with the selected instrument,
-                                                                            // remove the FILE from the array.
+    																		//-------------------------------------------//
+                                                                            // If it's NOT a two word instrument (else)  //
+																			//-------------------------------------------//
                                                                             else {
                                                                                 
-                                                                                if ($explosion[0] !== $selected_instrument_name){
-
-																					// For Testing
-																					//echo 'Unset ' . $counter_a . '!<br>';
-
+                                                                                if ($explosion[0] !== $selected_instrument_name)
                                                                                     unset($files[$counter_a]);
-                                                                                }
-                                                                                
-                                                                            } // else
+                                                                            }
 																			
                                                                             
+																			// Increment counter
                                                                             $counter_a++;
                                                                         }
                                                                         
@@ -359,28 +346,25 @@ Template Name: Marching Band MusicDistro
                                                                         $counter = 1;
                                                                         
                                                                         
-                                                                        // Go through each file
+																		
+																		//-- CYCLE THROUGH FILTERED FILES PRINT APPROPRIATE --//
+																		//--        LINKS FOR THE SELECTED INSTRUMENT       --//
                                                                         foreach( $files as $file){
                                                                             
-                                                                            // Take the string and break into an array (Explode)
-                                                                            // ex: "Hello World"
-                                                                            // explode(" ", Hello World) = array(Hello, World); (Indexed array)
+
+                                                                            //-- Explode File Into Array of Strings --//
                                                                             $explosion = explode(" ", $file['name']);																		
                                                                             
-																			
-																			// For Testing
-																			//echo '<br>Expl: ' . $explosion[0] . ' ' . $explosion[1] . ' ' . $explosion[2];
-																			
                                                                                                                                                     
-                                                                            // If the first of the array = the selected instrument OR
-                                                                            // If the first two of the array = selected instrument
+                                                                            //-- If the first word OR first two words = the slected instrument --//
                                                                             if (  
                                                                                   ($explosion[0] == $selected_instrument_name) || 
                                                                                   (($explosion[0] . ' ' . $explosion[1]) == $selected_instrument_name)
                                                                                )
                                                                             {
                                                                                 
-                                                                                // Remove the instrument name and space from file name (variable)
+                                                                               
+																			    // Remove the instrument name and space from file name (variable)
                                                                                 $name = str_replace($selected_instrument_name." ","",$file['name']);
                                                                                 
                                                                                 
@@ -407,18 +391,18 @@ Template Name: Marching Band MusicDistro
 																				
                                                                                 
 																				
-                                                                                // If it's not the last item, put in a pipe (DISABLED)
+                                                                                // If it's not the last item, put in a space
                                                                                 if ( $counter != count($files)){
                                                                                     echo '&nbsp';
                                                                                 }
 																				
 																				
-																				// Unset / Reset array to avoid pulling two numbers in explosion
-																				//unset($explosion);
+																				//-- Unset / Reset Array --//
 																				$explosion = array();
 																				
                                                                                 
                                                                                 $counter++;
+																				
                                                                             
                                                                             } // IF the name of the file = selected instrument
                                                                             
