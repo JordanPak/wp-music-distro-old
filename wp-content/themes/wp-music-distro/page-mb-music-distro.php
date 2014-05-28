@@ -4,6 +4,71 @@ Template Name: Marching Band MusicDistro
 */
 ?>
 
+<?php
+
+//----------------------------//
+//-- WP MusicDistro Options --//
+//----------------------------//
+
+// BAND
+// Set to the category/download slug of the band.
+// Ex: $band = 'marching-knights';
+$band = 'marching-band';
+
+
+// SELECT INSTRUMENT BUTTON THEME
+// Set to bootstrap styling desired
+// Ex: $get_music_theme = 'btn-primary';
+$select_instrument_theme = 'btn-primary';
+
+
+// SELECT INSTRUMENT BUTTON TEXT
+// Sets value on button to select instrument
+// Ex: $select_instrument_text = 'Get Music';
+$select_instrument_text = 'Get Music';
+
+
+// REPORT ISSUE BUTTON LINK
+// Enter a link (absolute or relative) for the href value
+// Ex: $report_issue_link = 'report-issue';
+$report_issue_link = 'report-issue';
+
+
+// DOWNLOAD BUTTON THEME
+// Set to the bootstrap styling desired.
+// Ex: $dl_btn_class = 'btn-default';
+$dl_btn_theme = 'btn-default';
+
+
+// SINGLE-PART DOWNLOAD GLYPHICON
+// Set to the glyphicon class desired.
+// Ex: $single_dl_glyphicon = 'glyphicon glyphicon-arrow-down';
+$single_dl_glyphicon = 'glyphicon glyphicon-arrow-down';
+
+
+// CATEGORY PANEL WIDTH
+// Set the desired bootstrap column width of the panel.
+// Ex: $panel_width = '4';
+$panel_width = '4';
+
+
+// PANEL THEME
+// Bootstrap panel theme
+// Ex: $panel_theme = 'panel-primary';
+$panel_theme = 'panel-primary';
+
+
+// PANEL HEADER
+// Header tag to be used for category/panel titles
+// Ex: $panel_header = 'h4'; or $panel_header = 'b'
+$panel_header = 'h4';
+
+//---------------------------//
+
+
+?>
+
+
 <?php get_header(); ?>
 			
 			<div id="content" class="clearfix row">
@@ -35,7 +100,7 @@ Template Name: Marching Band MusicDistro
                                         <?php the_title(); ?>
                                         
                                         <!-- REPORT ISSUE BUTTON -->
-                                        <a class="btn btn-warning pull-right" href="report-issue"><span class="glyphicon glyphicon-exclamation-sign"></span> Report Issue</a>
+                                        <a class="btn btn-warning pull-right" href="<?php echo $report_issue_link; ?>"><span class="glyphicon glyphicon-exclamation-sign"></span> Report Issue</a>
                                         
                                     </h1>
                                 </div>
@@ -52,7 +117,7 @@ Template Name: Marching Band MusicDistro
                                 //------------------------------//
                                 
                                 // SLUG of the band (parent category)
-                                $band_slug = 'marching-band';
+                                $band_slug = $band;
                                 
                                 
                                 // Get the whole term BY slug, using the BAND SLUG (Parent Category Slug) 
@@ -187,7 +252,7 @@ Template Name: Marching Band MusicDistro
                                         <br>
                                         
                                         <!-- Submit Button -->
-                                        <button type="submit" class="btn btn-primary">Get Music</button>                          
+                                        <button type="submit" class="btn <?php echo $select_instrument_theme;?>"><?php echo $select_instrument_text; ?></button>                          
                                     
                                     </form>
                                 </div><!-- /.col -->
@@ -256,11 +321,11 @@ Template Name: Marching Band MusicDistro
                                             foreach( $tags as $tag )
                                             { ?>
                                                 
-                                                <div class="col-md-4">
+                                                <div class="col-md-<?php echo $panel_width; ?>">
                                                     
-                                                    <div class="panel panel-primary">
+                                                    <div class="panel <?php echo $panel_theme; ?>">
                                                         
-                                                        <div class="panel-heading"><?php echo '<h4>' . $tag->name . '</h4>'; ?></div>
+                                                        <div class="panel-heading"><?php echo '<' . $panel_header . '>' . $tag->name . '</' . $panel_header . '>'; ?></div>
                                                         
                                                         <div class="panel-body">
                                                             
@@ -380,13 +445,13 @@ Template Name: Marching Band MusicDistro
 																					( is_numeric($explosion[2]) == FALSE ) 
 																				   )
 																				{
-																					echo '<a class="btn btn-xs btn-default" href="'.$file['file'].'" target="_blank"><span class="glyphicon glyphicon-arrow-down"></span></a>';
+																					echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank"><span class="' . $single_dl_glyphicon . '"></span></a>';
 																				}
 																				
 																				
 																				// For sheet music with more than one part for a given instrument
 																				else {
-																					echo '<a class="btn btn-xs btn-default" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
+																					echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
 																				}
 																				
                                                                                 
