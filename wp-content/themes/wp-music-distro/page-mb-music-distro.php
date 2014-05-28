@@ -205,7 +205,7 @@ $panel_header = 'h4';
                             
                             
                             <div class="row">
-                                <div class="col-xs-4">
+                                <div class="col-sm-4">
                                     
                                     
                                     <form class="form-horizontal" role="form">
@@ -321,7 +321,7 @@ $panel_header = 'h4';
                                             foreach( $tags as $tag )
                                             { ?>
                                                 
-                                                <div class="col-md-<?php echo $panel_width; ?>">
+                                                <div class="col-sm-<?php echo $panel_width; ?>">
                                                     
                                                     <div class="panel <?php echo $panel_theme; ?>">
                                                         
