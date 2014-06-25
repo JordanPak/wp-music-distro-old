@@ -34,11 +34,11 @@ function edd_add_download_meta_box() {
 
 		/** Product Settings **/
 		add_meta_box( 'edd_product_settings', sprintf( __( '%1$s Settings', 'edd' ), edd_get_label_singular(), edd_get_label_plural() ),  'edd_render_settings_meta_box', $post_type, 'side', 'default' );
-		
+
 		/** Product Notes */
 		add_meta_box( 'edd_product_notes', sprintf( __( '%1$s Notes', 'edd' ), edd_get_label_singular(), edd_get_label_plural() ), 'edd_render_product_notes_meta_box', $post_type, 'normal', 'high' );
 
-		if ( current_user_can( 'view_shop_reports' ) || current_user_can( 'edit_product', get_the_ID() ) ) {
+		if ( current_user_can( 'view_product_stats', get_the_ID() ) ) {
 			/** Product Stats */
 			add_meta_box( 'edd_product_stats', sprintf( __( '%1$s Stats', 'edd' ), edd_get_label_singular(), edd_get_label_plural() ), 'edd_render_stats_meta_box', $post_type, 'side', 'high' );
 		}
@@ -53,7 +53,7 @@ add_action( 'add_meta_boxes', 'edd_add_download_meta_box' );
  * @return array $fields Array of fields.
  */
 function edd_download_metabox_fields() {
-	
+
 	$fields = array(
 			'_edd_product_type',
 			'edd_price',
@@ -78,7 +78,7 @@ function edd_download_metabox_fields() {
 	if ( edd_use_skus() ) {
 		$fields[] = 'edd_sku';
 	}
-	
+
 	return apply_filters( 'edd_metabox_fields_save', $fields );
 }
 
@@ -95,31 +95,45 @@ function edd_download_meta_box_save( $post_id, $post ) {
 	if ( ! isset( $_POST['edd_download_meta_box_nonce'] ) || ! wp_verify_nonce( $_POST['edd_download_meta_box_nonce'], basename( __FILE__ ) ) ) {
 		return;
 	}
-	
+
 	if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || ( defined( 'DOING_AJAX') && DOING_AJAX ) || isset( $_REQUEST['bulk_edit'] ) ) {
 		return;
 	}
-	
+
 	if ( isset( $post->post_type ) && 'revision' == $post->post_type ) {
 		return;
-	} 
-	
+	}
+
 	if ( ! current_user_can( 'edit_product', $post_id ) ) {
 		return;
 	}
-	
+
 	// The default fields that get saved
 	$fields = edd_download_metabox_fields();
-	
+
 	foreach ( $fields as $field ) {
 
 		// Accept blank or "0"
 		if ( '_edd_download_limit' == $field ) {
-			if ( ! empty( $_POST[$field] ) || strlen( $_POST[$field] ) === 0 || "0" === $_POST[$field] ) {
-				$new = apply_filters( 'edd_metabox_save_' . $field, $_POST[ $field ] );
-				update_post_meta( $post_id, $field, $new );
+			if ( ! empty( $_POST[ $field ] ) || strlen( $_POST[ $field ] ) === 0 || "0" === $_POST[ $field ] ) {
+
+				$global_limit = edd_get_option( 'file_download_limit' );
+				$new_limit    = apply_filters( 'edd_metabox_save_' . $field, $_POST[ $field ] );
+
+				// Only update the new limit if it is not the same as the global limit
+				if( $global_limit == $new_limit ) {
+
+					delete_post_meta( $post_id, '_edd_download_limit' );
+
+				} else {
+
+					update_post_meta( $post_id, '_edd_download_limit', $new_limit );
+
+				}
 			}
+
 		} else {
+
 			if ( ! empty( $_POST[ $field ] ) ) {
 				$new = apply_filters( 'edd_metabox_save_' . $field, $_POST[ $field ] );
 				update_post_meta( $post_id, $field, $new );
@@ -128,14 +142,13 @@ function edd_download_meta_box_save( $post_id, $post ) {
 			}
 		}
 
-
 	}
 
 	if ( edd_has_variable_prices( $post_id ) ) {
 		$lowest = edd_get_lowest_price_option( $post_id );
 		update_post_meta( $post_id, 'edd_price', $lowest );
 	}
-	
+
 	do_action( 'edd_save_download', $post_id, $post );
 }
 
@@ -167,6 +180,18 @@ add_filter( 'edd_metabox_save_edd_price', 'edd_sanitize_price_save' );
 function edd_sanitize_variable_prices_save( $prices ) {
 
 	global $post;
+
+	foreach( $prices as $id => $price ) {
+
+		if( empty( $price['amount'] ) ) {
+
+			$price['amount'] = 0;
+
+		}
+
+		$prices[ $id ]['amount'] = edd_sanitize_amount( $price['amount'] );
+
+	}
 
 	// Make sure all prices are rekeyed starting at 0
 	return array_values( $prices );
@@ -207,6 +232,18 @@ add_filter( 'edd_metabox_save__edd_bundled_products', 'edd_sanitize_bundled_prod
  * @return array $files Array of the remapped file downloads
  */
 function edd_sanitize_files_save( $files ) {
+
+	// Clean up filenames to ensure whitespaces are stripped
+	foreach( $files as $id => $file ) {
+
+		if( ! empty( $files[ $id ][ 'file' ] ) ) {
+			$files[ $id ][ 'file' ] = trim( $file[ 'file' ] );
+		}
+
+		if( ! empty( $files[ $id ][ 'name' ] ) ) {
+			$files[ $id ][ 'name' ] = trim( $file[ 'name' ] );
+		}
+	}
 
 	// Make sure all files are rekeyed starting at 0
 	return array_values( $files );
@@ -338,11 +375,11 @@ function edd_render_price_field( $post_id ) {
 
 	<div id="edd_regular_price_field" class="edd_pricing_fields" <?php echo $price_display; ?>>
 		<?php
-			$price_args = array( 
-				'name'  => 'edd_price', 
-				'value' => isset( $price ) ? esc_attr( edd_format_amount( $price ) ) : '', 
+			$price_args = array(
+				'name'  => 'edd_price',
+				'value' => isset( $price ) ? esc_attr( edd_format_amount( $price ) ) : '',
 				'class' => 'edd-price-field'
-			); 
+			);
 		?>
 
 		<?php if ( ! isset( $edd_options['currency_position'] ) || $edd_options['currency_position'] == 'before' ) : ?>
@@ -362,7 +399,7 @@ function edd_render_price_field( $post_id ) {
 		<input type="hidden" id="edd_variable_prices" class="edd_variable_prices_name_field" value=""/>
 		<p>
 			<?php echo EDD()->html->checkbox( array( 'name' => '_edd_price_options_mode', 'current' => $single_option_mode ) ); ?>
-			<label for="_edd_price_options_mode"><?php apply_filters( 'edd_multi_option_purchase_text', _e( 'Enable multi-option purchase mode. Allows multiple price options to be added to your cart at once', 'edd' ) ); ?></label>
+			<label for="_edd_price_options_mode"><?php echo apply_filters( 'edd_multi_option_purchase_text', __( 'Enable multi-option purchase mode. Allows multiple price options to be added to your cart at once', 'edd' ) ); ?></label>
 		</p>
 		<div id="edd_price_fields" class="edd_meta_table_wrap">
 			<table class="widefat edd_repeatable_table" width="100%" cellpadding="0" cellspacing="0">
@@ -452,12 +489,12 @@ function edd_render_price_row( $key, $args = array(), $post_id ) {
 
 	<td>
 		<?php
-			$price_args = array( 
-				'name'  => 'edd_variable_prices[' . $key . '][amount]', 
+			$price_args = array(
+				'name'  => 'edd_variable_prices[' . $key . '][amount]',
 				'value' => $amount,
 				'placeholder' => '9.99',
 				'class' => 'edd-price-field'
-			); 
+			);
 		?>
 
 		<?php if( ! isset( $edd_options['currency_position'] ) || $edd_options['currency_position'] == 'before' ) : ?>
@@ -494,13 +531,13 @@ function edd_render_product_type_field( $post_id = 0 ) {
 		<strong><?php echo apply_filters( 'edd_product_type_options_heading', __( 'Product Type Options:', 'edd' ) ); ?></strong>
 	</p>
 	<p>
-		<?php echo EDD()->html->select( array( 
-			'options'          => $types, 
-			'name'             => '_edd_product_type', 
-			'id'               => '_edd_product_type', 
-			'selected'         => $type, 
-			'show_option_all'  => false, 
-			'show_option_none' => false 
+		<?php echo EDD()->html->select( array(
+			'options'          => $types,
+			'name'             => '_edd_product_type',
+			'id'               => '_edd_product_type',
+			'selected'         => $type,
+			'show_option_all'  => false,
+			'show_option_none' => false
 		) ); ?>
 		<label for="edd_product_type"><?php _e( 'Select a product type', 'edd' ); ?></label>
 	</p>
@@ -537,7 +574,7 @@ function edd_render_products_field( $post_id ) {
 								'id'       => 'edd_bundled_products',
 								'selected' => $products,
 								'multiple' => true,
-								'chosen'   => true 
+								'chosen'   => true
 							) );
 							?>
 						</td>
@@ -595,11 +632,12 @@ function edd_render_files_field( $post_id = 0 ) {
 				<?php
 					if ( ! empty( $files ) && is_array( $files ) ) :
 						foreach ( $files as $key => $value ) :
-							$name = isset( $value['name'] ) ? $value['name'] : '';
-							$file = isset( $value['file'] ) ? $value['file'] : '';
-							$condition = isset( $value['condition'] ) ? $value['condition'] : false;
+							$name          = isset( $value['name'] )          ? $value['name']          : '';
+							$file          = isset( $value['file'] )          ? $value['file']          : '';
+							$condition     = isset( $value['condition'] )     ? $value['condition']     : false;
+							$attachment_id = isset( $value['attachment_id'] ) ? absint( $value['attachment_id'] ) : false;
 
-							$args = apply_filters( 'edd_file_row_args', compact( 'name', 'file', 'condition' ), $value );
+							$args = apply_filters( 'edd_file_row_args', compact( 'name', 'file', 'condition', 'attachment_id' ), $value );
 				?>
 						<tr class="edd_repeatable_upload_wrapper edd_repeatable_row">
 							<?php do_action( 'edd_render_file_row', $key, $args, $post_id ); ?>
@@ -640,13 +678,13 @@ add_action( 'edd_meta_box_files_fields', 'edd_render_files_field', 20 );
  */
 function edd_render_file_row( $key = '', $args = array(), $post_id ) {
 	$defaults = array(
-		'name'      => null,
-		'file'      => null,
-		'condition' => null
+		'name'          => null,
+		'file'          => null,
+		'condition'     => null,
+		'attachment_id' => null
 	);
 
 	$args = wp_parse_args( $args, $defaults );
-	extract( $args, EXTR_SKIP );
 
 	$prices = edd_get_variable_prices( $post_id );
 
@@ -661,9 +699,10 @@ function edd_render_file_row( $key = '', $args = array(), $post_id ) {
 	</td>
 	-->
 	<td>
+		<input type="hidden" name="edd_download_files[<?php echo absint( $key ); ?>][attachment_id]" class="edd_repeatable_attachment_id_field" value="<?php echo esc_attr( absint( $args['attachment_id'] ) ); ?>"/>
 		<?php echo EDD()->html->text( array(
 			'name'        => 'edd_download_files[' . $key . '][name]',
-			'value'       => $name,
+			'value'       => $args['name'],
 			'placeholder' => __( 'File Name', 'edd' ),
 			'class'       => 'edd_repeatable_name_field large-text'
 		) ); ?>
@@ -673,7 +712,7 @@ function edd_render_file_row( $key = '', $args = array(), $post_id ) {
 		<div class="edd_repeatable_upload_field_container">
 			<?php echo EDD()->html->text( array(
 				'name'        => 'edd_download_files[' . $key . '][file]',
-				'value'       => $file,
+				'value'       => $args['file'],
 				'placeholder' => __( 'Upload or enter the file URL', 'edd' ),
 				'class'       => 'edd_repeatable_upload_field edd_upload_field large-text'
 			) ); ?>
@@ -685,7 +724,7 @@ function edd_render_file_row( $key = '', $args = array(), $post_id ) {
 	</td>
 
 	<td class="pricing"<?php echo $variable_display; ?>>
-		<?php 
+		<?php
 			$options = array();
 
 			if ( $prices ) {
@@ -698,9 +737,9 @@ function edd_render_file_row( $key = '', $args = array(), $post_id ) {
 				'name'             => 'edd_download_files[' . $key . '][condition]',
 				'class'            => 'edd_repeatable_condition_field',
 				'options'          => $options,
-				'selected'         => $condition,
+				'selected'         => $args['condition'],
 				'show_option_none' => false
-			) ); 
+			) );
 		?>
 	</td>
 
@@ -900,6 +939,10 @@ add_action( 'edd_product_notes_meta_box_fields', 'edd_render_product_notes_field
  */
 function edd_render_stats_meta_box() {
 	global $post;
+
+	if( ! current_user_can( 'view_product_stats', $post->ID ) ) {
+		return;
+	}
 
 	$earnings = edd_get_download_earnings_stats( $post->ID );
 	$sales    = edd_get_download_sales_stats( $post->ID );

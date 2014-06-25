@@ -27,6 +27,7 @@ function edd_download_shortcode( $atts, $content = null ) {
 
 	extract( shortcode_atts( array(
 			'id' 	        => $post->ID,
+			'sku'			=> '',
 			'price'         => '1',
 			'paypal_direct' => '0',
 			'text'	        => isset( $edd_options[ 'add_to_cart_text' ] )  && $edd_options[ 'add_to_cart_text' ]    != '' ? $edd_options[ 'add_to_cart_text' ] : __( 'Purchase', 'edd' ),
@@ -42,10 +43,16 @@ function edd_download_shortcode( $atts, $content = null ) {
 	if( isset( $atts['color'] )	)
 		$atts['color'] = ( $atts['color'] == 'inherit' ) ? '' : $atts['color'];
 
-	// Edd_get_purchase_link() expects the ID to be download_id since v1.3
-	$atts['download_id'] = $atts['id'];
+	if( isset( $atts['id'] ) ) {
+		// Edd_get_purchase_link() expects the ID to be download_id since v1.3
+		$atts['download_id'] = $atts['id'];
 
-	$download = edd_get_download( $atts['download_id'] );
+		$download = edd_get_download( $atts['download_id'] );
+	} elseif( isset( $atts['sku'] ) ) {
+		$download = edd_get_download_by( 'sku', $atts['sku'] );
+
+		$atts['download_id'] = $download->ID;
+	}
 
 	if ( $download ) {
 		return edd_get_purchase_link( $atts );
@@ -137,6 +144,26 @@ function edd_login_form_shortcode( $atts, $content = null ) {
 	return edd_login_form( $redirect );
 }
 add_shortcode( 'edd_login', 'edd_login_form_shortcode' );
+
+/**
+ * Register Shortcode
+ *
+ * Shows a registration form allowing users to users to register for the site
+ *
+ * @since 2.0
+ * @param array $atts Shortcode attributes
+ * @param string $content
+ * @uses edd_register_form()
+ * @return string
+ */
+function edd_register_form_shortcode( $atts, $content = null ) {
+	extract( shortcode_atts( array(
+			'redirect' => '',
+		), $atts, 'edd_register' )
+	);
+	return edd_register_form( $redirect );
+}
+add_shortcode( 'edd_register', 'edd_register_form_shortcode' );
 
 /**
  * Discounts short code
@@ -249,10 +276,14 @@ function edd_downloads_query( $atts, $content = null ) {
 
 	$query = array(
 		'post_type'      => 'download',
-		'posts_per_page' => absint( $number ),
+		'posts_per_page' => (int) $number,
 		'orderby'        => $orderby,
 		'order'          => $order
 	);
+
+	if ( $query['posts_per_page'] < -1 ) {
+		$query['posts_per_page'] = abs( $query['posts_per_page'] );
+	}
 
 	switch ( $orderby ) {
 		case 'price':
@@ -355,7 +386,7 @@ function edd_downloads_query( $atts, $content = null ) {
 		ob_start(); ?>
 		<div class="edd_downloads_list <?php echo apply_filters( 'edd_downloads_list_wrapper_class', $wrapper_class, $atts ); ?>">
 			<?php while ( $downloads->have_posts() ) : $downloads->the_post(); ?>
-				<div itemscope itemtype="http://schema.org/Product" class="<?php echo apply_filters( 'edd_download_class', 'edd_download', get_the_ID(), $atts ); ?>" id="edd_download_<?php echo get_the_ID(); ?>" style="width: <?php echo $column_width; ?>; float: left;">
+				<div itemscope itemtype="http://schema.org/Product" class="<?php echo apply_filters( 'edd_download_class', 'edd_download', get_the_ID(), $atts, $i ); ?>" id="edd_download_<?php echo get_the_ID(); ?>" style="width: <?php echo $column_width; ?>; float: left;">
 					<div class="edd_download_inner">
 						<?php
 

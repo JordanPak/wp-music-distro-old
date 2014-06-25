@@ -16,6 +16,12 @@ Template Name: Marching Band MusicDistro
 $band = 'marching-band';
 
 
+// SHOW HEADER
+// Show the header & report issue button (if the button is enabled)
+// Ex: $show_header = true
+$show_header = true;
+
+
 // SELECT INSTRUMENT BUTTON THEME
 // Set to bootstrap styling desired
 // Ex: $get_music_theme = 'btn-primary';
@@ -26,6 +32,29 @@ $select_instrument_theme = 'btn-primary';
 // Sets value on button to select instrument
 // Ex: $select_instrument_text = 'Get Music';
 $select_instrument_text = 'Get Music';
+
+
+
+/* DISABLE RECORDINGS BUTTON 
+
+// GET RECORDINGS BUTTON THEME
+// Set to bootstrap styling desired
+// Ex: $get_recordings_theme = 'btn-primary';
+$get_recordings_theme = 'btn-primary';
+
+
+// GET RECORDINGS BUTTON TEXT
+// Sets value on button to get recordings
+// Ex: $get_recordings_text = 'Get Music';
+$get_recordings_text = 'Get Recordings';
+
+*/
+
+
+// SHOW REPORT ISSUE
+// Boolean (true/false)
+// Ex: $report_issue = true;
+$report_issue = false;
 
 
 // REPORT ISSUE BUTTON LINK
@@ -55,7 +84,7 @@ $panel_width = '4';
 // PANEL THEME
 // Bootstrap panel theme
 // Ex: $panel_theme = 'panel-primary';
-$panel_theme = 'panel-primary';
+$panel_theme = 'panel-warning';
 
 
 // PANEL HEADER
@@ -95,12 +124,21 @@ $panel_header = 'h4';
                             <!--// PAGE HEADER //-->
                             <header>
                                 
-                                <div class="page-header">
+                                <?php // Remove header if wanted
+									
+									if( $show_header == false )
+										$show_header = 'style="display:none;"';
+								?>
+                                
+                                <div class="page-header" <?php echo $show_header; ?>>
                                     <h1>
                                         <?php the_title(); ?>
                                         
                                         <!-- REPORT ISSUE BUTTON -->
-                                        <a class="btn btn-warning pull-right" href="<?php echo $report_issue_link; ?>"><span class="glyphicon glyphicon-exclamation-sign"></span> Report Issue</a>
+                                        <?php 
+											if ($report_issue == true)
+                                        		echo '<a class="btn btn-warning pull-right" href="<?php echo $report_issue_link; ?>"><span class="glyphicon glyphicon-exclamation-sign"></span> Report Issue</a>'; 
+										?>
                                         
                                     </h1>
                                 </div>
@@ -201,12 +239,14 @@ $panel_header = 'h4';
                                 
                             <!-- END TESTING -->
                             
-                            */?>
+                             */?>
                             
                             
                             <div class="row">
-                                <div class="col-sm-4">
-                                    
+                                
+                                
+								<!--// GET MUSIC FORM //-->
+                                <div class="col-sm-8">
                                     
                                     <form class="form-horizontal" role="form">
                                                                              
@@ -215,10 +255,10 @@ $panel_header = 'h4';
                                             
     
                                             if( $selected != 0 ) {
-                                                echo '<p><b>Different Instrument?</b></p>';
+                                                echo '<p><b>Different Instrument? Recordings?</b></p>';
                                             }
                                             else {
-                                                echo '<p><b>Select an Instrument:</b></p>';
+                                                echo '<p><b>Select an Instrument or Recordings:</b></p>';
                                             }
                                             
                                             
@@ -244,18 +284,49 @@ $panel_header = 'h4';
                                                 'hide_if_empty'      => false,
                                                 'walker'             => ''
                                             );
+											
                                             
                                             // Display dropdown for categories
                                             wp_dropdown_categories( $catArgs );
                                         ?>                 
+                                                                                
+                                        <!-- Submit Button for Selecting Instrument -->
+                                        <button type="submit" class="btn <?php echo $select_instrument_theme;?>"><?php echo $select_instrument_text; ?></button>
+                                                                                
+                                    </form>
+                                </div><!-- /.col (Get Music Form) -->
+                                
+
+
+								<!--// GET RECORDINGS FORM (DISABLED) //-->
+                                <?php /*
+                                <div class="col-sm-4">
+                                    
+                                    <form class="form-horizontal" role="form">
+                                        
+                                        <?php 										
+                                            
+    
+                                            if( $get_recordings_input != 0 ) {
+                                                echo '<p><b>You selected recording!</b></p>';
+                                            }
+                                            else {
+                                                echo '<p><b>Get A Recording</b></p>';
+                                            }
+                                            
+                                        ?>                 
                                         
                                         <br>
                                         
-                                        <!-- Submit Button -->
-                                        <button type="submit" class="btn <?php echo $select_instrument_theme;?>"><?php echo $select_instrument_text; ?></button>                          
-                                    
+                                        <!-- Submit Button for Selecting Instrument -->
+                                        <button type="submit" class="btn <?php echo $get_recordings_theme;?>"><?php echo $get_recordings_text; ?></button>
+                                                                                
                                     </form>
-                                </div><!-- /.col -->
+                                </div><!-- /.col (Get Music Form) -->
+                                
+                                */ ?>
+                                
+                                
                             </div><!-- /.row -->
                             
                             
@@ -267,6 +338,12 @@ $panel_header = 'h4';
                                 <br>
                                     
                                     <?php
+									
+									//---------------------------------------//
+									//-- GET INSTRUMENT OR GET RECORDINGS? --//
+									//---------------------------------------//
+																			
+									
                                         
                                         //-- IF AN INSTRUMENT HAS BEEN SELECTED --//
                                         if($selected)
@@ -276,9 +353,11 @@ $panel_header = 'h4';
                                             $arrangementSelection = array(
                                                 'post_type'			=> 'download',
                                                 'download_category'	=> $selected_instrument_slug,
-                                                'fields' => 'ids' // This is so only the ID is returned instead of the WHOLE post object (Performance)
-                                            );
-                                            
+                                                'fields' => 'ids', // This is so only the ID is returned instead of the WHOLE post object (Performance)
+                                            	'orderby' => 'title',
+												'order' => 'ASC',
+												'posts_per_page' => -1
+											);                                            
                                             
 											
 											//----------------------------------------------------//
@@ -349,7 +428,7 @@ $panel_header = 'h4';
                                                                         
 																		
                                                                         //-- Display Arrangement Title --//
-                                                                        echo '<b>' . get_the_title($arrangement) . ': </b>';
+                                                                        echo '<b>' . get_the_title($arrangement) . ': </b><div class="dl-btns">';
                                                                         
                                                                         
 																		//-- Get Files (Names & URLSs) For Current Arrangement --//
@@ -438,23 +517,35 @@ $panel_header = 'h4';
                                                                                 // the disgusting thing that is EDD Free Downloads
                                                                                 
 																				
-																				// If the arrangment only has one part for a given instrument
-																				// (Detected by the input name not having a number)
-																				if ( 
-																					( is_numeric($explosion[1]) == FALSE ) &&
-																					( is_numeric($explosion[2]) == FALSE ) 
-																				   )
-																				{
-																					echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank"><span class="' . $single_dl_glyphicon . '"></span></a>';
+																				// Exception for Recordings: Different Icon!
+																				if($selected_instrument_name == "Recordings") {
+																						
+																					echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank"><span class="glyphicon glyphicon-play"></span></a>';																				
+																				
 																				}
 																				
 																				
-																				// For sheet music with more than one part for a given instrument
+																				// Not recording
 																				else {
-																					echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
-																				}
 																				
-                                                                                
+																					// If the arrangment only has one part for a given instrument
+																					// (Detected by the input name not having a number)
+																					if ( 
+																						( is_numeric($explosion[1]) == FALSE ) &&
+																						( is_numeric($explosion[2]) == FALSE ) 
+																					   )
+																					{
+																						echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank"><span class="' . $single_dl_glyphicon . '"></span></a>';
+																					}
+																					
+																					
+																					// For sheet music with more than one part for a given instrument
+																					else {
+																						echo '<a class="btn btn-xs ' . $dl_btn_theme . '" href="'.$file['file'].'" target="_blank">' . $name . '</a>';
+																					}
+																				
+																				} // Else: Not recording
+																				
 																				
                                                                                 // If it's not the last item, put in a space
                                                                                 if ( $counter != count($files)){
@@ -475,8 +566,12 @@ $panel_header = 'h4';
                                                                         } // foreach: files as file
                                                                         
                                                                         
+																		// Finish dl-btns
+																		echo '</div>';
+																		
+																		
 																		// Add Spacer
-																		echo '<br>';
+																		echo '<hr>';
 																		
 																		
                                                                     } // if: has_term download tag
@@ -527,9 +622,7 @@ $panel_header = 'h4';
 					<?php endif; ?>
 			
 				</div> <!-- end #main -->
-    
-				<?php //get_sidebar(); // sidebar 1 ?>
-    
+        
 			</div> <!-- end #content -->
 
 <?php get_footer(); ?>

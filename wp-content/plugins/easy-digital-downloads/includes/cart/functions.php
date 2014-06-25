@@ -20,14 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function edd_get_cart_contents() {
 	$cart = EDD()->session->get( 'edd_cart' );
-	$fees = EDD()->session->get( 'edd_cart_fees' );
 	$cart = ! empty( $cart ) ? array_values( $cart ) : false;
-
-	if( empty( $cart ) && ! empty( $fees ) ) {
-		// Remove all fees if cart is empty
-		EDD()->session->set( 'edd_cart_fees', null );
-	}
-
 	return apply_filters( 'edd_cart_contents', $cart );
 }
 
@@ -83,7 +76,7 @@ function edd_get_cart_content_details() {
  * Get Cart Quantity
  *
  * @since 1.0
- * @return int $quantity Quantity of one item in the cart
+ * @return int Quantity of items in the cart
  */
 function edd_get_cart_quantity() {
 	return ( $cart = edd_get_cart_contents() ) ? count( $cart ) : 0;
@@ -102,7 +95,9 @@ function edd_get_cart_quantity() {
  * @return string Cart key of the new item
  */
 function edd_add_to_cart( $download_id, $options = array() ) {
+
 	$cart = apply_filters( 'edd_pre_add_to_cart_contents', edd_get_cart_contents() );
+
 	$download = get_post( $download_id );
 
 	if( 'download' != $download->post_type )
@@ -123,24 +118,38 @@ function edd_add_to_cart( $download_id, $options = array() ) {
 	$new_item = array();
 
 	if( isset( $options['quantity'] ) ) {
-		$quantity = absint( $options['quantity'] );
+		$quantity = absint( preg_replace( '/[^0-9\.]/', '', $options['quantity'] ) );
 		unset( $options['quantity'] );
 	} else {
 		$quantity = 1;
 	}
 
 	if ( isset( $options['price_id'] ) && is_array( $options['price_id'] ) ) {
+
 		// Process multiple price options at once
 		foreach ( $options['price_id'] as $price ) {
+
 			$item = array(
 				'id'           => $download_id,
 				'options'      => array(
-					'price_id' => $price
+					'price_id' => preg_replace( '/[^0-9\.]/', '', $price )
 				),
 				'quantity'     => $quantity
 			);
+
 		}
+
 	} else {
+
+		// Sanitize price IDs
+		foreach( $options as $key => $option ) {
+
+			if( 'price_id' == $key ) {
+				$options[ $key ] = preg_replace( '/[^0-9\.-]/', '', $option );
+			}
+
+		}
+
 		// Add a single item
 		$item = array(
 			'id'       => $download_id,
@@ -406,7 +415,7 @@ function edd_get_cart_item_price( $download_id = 0, $options = array(), $include
  */
 function edd_get_cart_item_final_price( $item_key = 0 ) {
 	$items = edd_get_cart_content_details();
-	$final = $cart_items[ $item_key ]['price'];
+	$final = $items[ $item_key ]['price'];
 	return apply_filters( 'edd_cart_item_final_price', $final, $item_key );
 }
 
@@ -440,7 +449,10 @@ function edd_get_cart_item_tax( $item = array() ) {
 			$price -= apply_filters( 'edd_get_cart_item_tax_item_discount_amount', edd_get_cart_item_discount_amount( $item ), $item );
 		}
 
-		$tax = edd_calculate_tax( $price );
+		$country = ! empty( $_POST['billing_country'] ) ? $_POST['billing_country'] : false;
+		$state   = ! empty( $_POST['card_state'] )      ? $_POST['card_state']      : false;
+
+		$tax = edd_calculate_tax( $price, $country, $state );
 
 	}
 
@@ -616,11 +628,12 @@ function edd_cart_total( $echo = true ) {
  * Just a simple wrapper function for EDD_Fees::has_fees()
  *
  * @since 1.5
+ * @param string $type
  * @uses EDD()->fees->has_fees()
  * @return bool Whether the cart has fees applied or not
  */
-function edd_cart_has_fees() {
-	return EDD()->fees->has_fees();
+function edd_cart_has_fees( $type = 'all' ) {
+	return EDD()->fees->has_fees( $type );
 }
 
 /**
@@ -629,11 +642,12 @@ function edd_cart_has_fees() {
  * Just a simple wrapper function for EDD_Fees::get_fees()
  *
  * @since 1.5
+ * @param string $type
  * @uses EDD()->fees->get_fees()
  * @return array All the cart fees that have been applied
  */
-function edd_get_cart_fees() {
-	return EDD()->fees->get_fees();
+function edd_get_cart_fees( $type = 'all' ) {
+	return EDD()->fees->get_fees( $type );
 }
 
 /**
@@ -647,6 +661,34 @@ function edd_get_cart_fees() {
  */
 function edd_get_cart_fee_total() {
 	return EDD()->fees->total();
+}
+
+/**
+ * Get cart tax on Fees
+ *
+ * @since 2.0
+ * @uses EDD()->fees->get_fees()
+ * @return float Total Cart tax on Fees
+ */
+function edd_get_cart_fee_tax() {
+
+	$tax  = 0;
+	$fees = edd_get_cart_fees();
+
+	if( $fees ) {
+
+		foreach ( $fees as $fee_id => $fee ) {
+
+			if( ! empty( $fee['no_tax' ] ) ) {
+				continue;
+			}
+
+			$tax += edd_calculate_tax( $fee['amount'] );
+
+		}
+	}
+
+	return apply_filters( 'edd_get_cart_fee_tax', $tax );
 }
 
 /**
@@ -693,10 +735,12 @@ function edd_get_cart_tax() {
 		$taxes    = wp_list_pluck( $items, 'tax' );
 
 		if( is_array( $taxes ) ) {
-			$cart_tax = array_sum( $taxes );	
+			$cart_tax = array_sum( $taxes );
 		}
-		
+
 	}
+
+	$cart_tax += edd_get_cart_fee_tax();
 
 	return apply_filters( 'edd_get_cart_tax', $cart_tax );
 }
@@ -774,7 +818,7 @@ function edd_add_collection_to_cart( $taxonomy, $terms ) {
 function edd_remove_item_url( $cart_key, $post, $ajax = false ) {
 	global $post;
 
-	if ( defined('DOING_AJAX') ){	
+	if ( defined('DOING_AJAX') ){
 		$current_page = edd_get_checkout_uri();
 	} else if( is_page() ) {
 		$current_page = add_query_arg( 'page_id', $post->ID, home_url( 'index.php' ) );
@@ -786,6 +830,31 @@ function edd_remove_item_url( $cart_key, $post, $ajax = false ) {
 	$remove_url = add_query_arg( array( 'cart_item' => $cart_key, 'edd_action' => 'remove' ), $current_page );
 
 	return apply_filters( 'edd_remove_item_url', $remove_url );
+}
+
+/**
+ * Returns the URL to remove an item from the cart
+ *
+ * @since 1.0
+ * @global $post
+ * @param string $fee_id Fee ID
+ * @return string $remove_url URL to remove the cart item
+ */
+function edd_remove_cart_fee_url( $fee_id = '') {
+	global $post;
+
+	if ( defined('DOING_AJAX') ){
+		$current_page = edd_get_checkout_uri();
+	} else if( is_page() ) {
+		$current_page = add_query_arg( 'page_id', $post->ID, home_url( 'index.php' ) );
+	} else if( is_singular() ) {
+		$current_page = add_query_arg( 'p', $post->ID, home_url( 'index.php' ) );
+	} else {
+		$current_page = edd_get_current_page_url();
+	}
+	$remove_url = add_query_arg( array( 'fee' => $fee_id, 'edd_action' => 'remove_fee' ), $current_page );
+
+	return apply_filters( 'edd_remove_fee_url', $remove_url );
 }
 
 /**
@@ -869,7 +938,7 @@ function edd_get_purchase_session() {
 function edd_is_cart_saving_disabled() {
 	global $edd_options;
 
-	return apply_filters( 'edd_cart_saving_disabled', isset( $edd_options['disable_cart_saving'] ) );
+	return apply_filters( 'edd_cart_saving_disabled', ! isset( $edd_options['enable_cart_saving'] ) );
 }
 
 /**

@@ -453,6 +453,10 @@ if( !function_exists("theme_styles") ) {
         // For child themes
         wp_register_style( 'wpbs-style', get_stylesheet_directory_uri() . '/style.css', array(), '1.0', 'all' );
         wp_enqueue_style( 'wpbs-style' );
+		
+		// FOR WP MUSIC DISTRO 
+		wp_register_style( 'music-distro', get_stylesheet_directory_uri() . '/music-distro.css', array(), '1.0', 'all' );
+		wp_enqueue_style( 'music-distro' );
     }
 }
 add_action( 'wp_enqueue_scripts', 'theme_styles' );

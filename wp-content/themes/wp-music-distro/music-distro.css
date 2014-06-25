@@ -1,0 +1,66 @@
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Oswald', sans-serif !important;
+}
+
+.panel-body .dl-btns {
+	display: inline-block;
+	float: right;
+}
+
+.panel-warning {
+	background-color: #fff;
+	-webkit-box-shadow: 0 1px 6px rgba(0,0,0,0.175) !important;
+	box-shadow: 0 1px 6px rgba(0,0,0,0.175) !important;
+	border: 1px solid #d4d4d4 !important;
+	margin-bottom: 30px !important;
+/*	border-radius: 0px !important;
+	-mox-border-radius: 0px !important; */
+}
+
+.panel-warning .panel-heading {
+	background-color: #231f20 !important;
+	background: #231f20 !important;
+	border-color: #000 !important;
+	border-bottom: 5px solid #000 !important;
+/*	border-top-right-radius: 0px !important;
+	border-top-left-radius: 0px !important; */
+}
+
+.panel-warning .panel-heading h4 {
+	color: #fff !important;
+}
+
+.panel-body {
+	overflow: auto;
+}
+
+.panel-body b {
+	font-weight: bold;
+	max-width: 70%;
+	display: inline-block;
+}
+
+.panel-body hr {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.panel-body hr:last-child {
+	display: none;
+}
+
+.form-control {
+	display: inline-block;
+	max-width: 200px;
+	margin-right: 5px;
+}
+
+
+@media(min-width:768px) {
+
+	.panel-body {
+		height: 250px;
+		overflow: auto;
+	}
+
+}
